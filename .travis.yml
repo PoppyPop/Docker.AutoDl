@@ -1,5 +1,10 @@
 language  : csharp
 mono: none
+dist: trusty
 dotnet: 2.1.300
 solution: Docker.AutoDl.sln
-
+branches:  
+  only:  
+    - master
+script:  
+  - dotnet build
