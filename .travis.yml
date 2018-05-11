@@ -5,3 +5,4 @@ dotnet: 2.1.300
 solution: Docker.AutoDl.sln
 script:  
   - dotnet build -c Release
+  - dotnet test Docker.AutoDl.Tests/Docker.AutoDl.Tests.csproj
