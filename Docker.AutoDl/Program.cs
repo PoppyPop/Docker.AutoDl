@@ -2,34 +2,28 @@
 using System.Composition;
 using System.Composition.Convention;
 using System.Composition.Hosting;
-using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using Docker.AutoDl.Shared;
+using Docker.AutoDl.Shared.Database;
 
 namespace Docker.AutoDl
 {
     class Program
     {
+
         [Import]
-        private IMefTest mef { get; set; }
+        private IAutoDl AutoDl { get; set; }
 
         static void Main(string[] args)
         {
-
-            var p =new Program();
-            p.Run();
-
+            Program p = new Program();
+            p.Compose();
+            p.AutoDl.Run();
+            //Console.WriteLine(p.AutoDl.Text);
 
             Console.WriteLine("End");
             Console.ReadLine();
         }
-
-        public void Run()
-        {
-            Compose();
-            Console.WriteLine(mef.Text);
-        }
-
 
         private void Compose()
         {
@@ -37,10 +31,12 @@ namespace Docker.AutoDl
 
             #region Custom export
 
-            convention.ForType<MefExport2>().Export<IMefTest>();
+            convention.ForType<AutoDl>().Export<IAutoDl>();
 
+            convention.ForType<Remote.Trakt.TraktApiClient>().Export<ITraktApiClient>();
+            convention.ForType<Remote.Trakt.TraktApi>().Export<ITraktApi>();
 
-            convention.ForType<MefExportTest2>().Export<IMefTest2>();
+            convention.ForType<Database.SqLite.SqLiteDatabase>().Export<IDatabase>();
 
             #endregion
 
@@ -50,7 +46,7 @@ namespace Docker.AutoDl
 
             using (var container = configuration.CreateContainer())
             {
-                mef = container.GetExport<IMefTest>();
+                AutoDl = container.GetExport<IAutoDl>();
             }
         }
     }

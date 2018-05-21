@@ -7,7 +7,16 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Composition" Version="1.0.31" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0-rc1-final" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0-rc1-final" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="4.5.0-rc1" />
     <PackageReference Include="TraktApiSharp" Version="1.0.0-alpha2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Authent\" />
+    <Folder Include="Sandbox\" />
   </ItemGroup>
 
 </Project>

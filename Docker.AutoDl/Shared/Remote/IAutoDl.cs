@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Docker.AutoDl
+namespace Docker.AutoDl.Shared
 {
-    interface IMefTest
+    public interface IAutoDl
     {
-        string Text { get; }
+        void Run();
     }
 }
