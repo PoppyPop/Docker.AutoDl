@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using TraktApiSharp.Enums;
 
@@ -16,6 +17,17 @@ namespace Docker.AutoDl.Shared
         public TraktSeason()
         {
             MissingEpisodes = new List<MissingEpisode>();
+        }
+
+        public static implicit operator Season(TraktSeason trakt)
+        {
+            var season = new Season()
+            {
+                SeasonNumber = trakt.Season,
+                MissingEpisodes = trakt.MissingEpisodes.Where(e => e.Episode.HasValue).Select(e => e.Episode.Value).ToList()
+            };
+
+            return season;
         }
     }
 }

@@ -6,17 +6,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.8.4" />
     <PackageReference Include="Microsoft.Composition" Version="1.0.31" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0-rc1-final" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0-rc1-final" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="System.ServiceModel.Syndication" Version="4.5.0-rc1" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="4.5.0" />
     <PackageReference Include="TraktApiSharp" Version="1.0.0-alpha2" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Authent\" />
     <Folder Include="Sandbox\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Mock\Remote\ExDown\9.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Mock\Remote\ExDown\w.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Mock\Remote\ExDown\z.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

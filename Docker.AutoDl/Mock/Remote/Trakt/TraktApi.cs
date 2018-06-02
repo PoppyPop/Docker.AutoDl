@@ -3,21 +3,38 @@ using Docker.AutoDl.Shared;
 
 namespace Docker.AutoDl.Mock.Remote.Trakt
 {
-    public class TraktApi : ITraktApi
+    public class TraktApi : ITrackingApi
     {
         public string GetMode => "Mock";
 
-        public List<TraktShow> GetMissingEpisodes()
+        public List<Show> GetMissingEpisodes()
         {
-            List<TraktShow> result = new List<TraktShow>();
+            List<Show> result = new List<Show>();
 
-            result.Add(new TraktShow
+            Season season = new Season
             {
-                Id = 360,
-                SerieName = "Doctor Who",
-                Providers = new Dictionary<string, string> { { "Imdb", "tt0436992" }, { "Tmdb", "57243" } },
-                //MissingEpisodes = new List<MissingEpisode> { new MissingEpisode { Episode = 1, Season = 9 } }
+                SeasonNumber = 2,
+                MissingEpisodes = new List<int> {3,4,5 }
+            };
 
+            result.Add(new Show
+            {
+                Id = 99718,
+                SerieName = "Westworld",
+                Providers = new Dictionary<string, string> { { "Imdb", "tt0475784" }, { "Tmdb", "63247" } },
+                Seasons = new List<Season> { season }
+            });
+
+            result.Add(new Show
+            {
+                Id = 0,
+                SerieName = "z fake",
+            });
+
+            result.Add(new Show
+            {
+                Id = 0,
+                SerieName = "9 fake",
             });
 
             return result;

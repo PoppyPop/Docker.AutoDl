@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using TraktApiSharp.Enums;
 
@@ -27,6 +28,20 @@ namespace Docker.AutoDl.Shared
         {
             Providers = new Dictionary<string, string>();
             Seasons = new List<TraktSeason>();
+        }
+
+        public static implicit operator Show(TraktShow trakt)
+        {
+            var show = new Show()
+            {
+                Id = trakt.Id,
+                Providers = trakt.Providers,
+                SerieName = trakt.SerieName,
+                Year = trakt.Year,
+                Seasons = trakt.Seasons.Select(s => (Season)s).ToList()
+            };
+
+            return show;
         }
     }
 }

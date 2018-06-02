@@ -19,7 +19,7 @@ using TraktApiSharp.Responses;
 
 namespace Docker.AutoDl.Remote.Trakt
 {
-    public class TraktApi : ITraktApi
+    public class TraktApi : ITrackingApi
     {
         public string GetMode => "Remote / " + TraktApiClient.GetMode;
 
@@ -133,7 +133,7 @@ namespace Docker.AutoDl.Remote.Trakt
             }
         }
 
-        public List<TraktShow> GetMissingEpisodes()
+        public List<Show> GetMissingEpisodes()
         {
             RefreshHiddenItem().Wait();
 
@@ -229,93 +229,100 @@ namespace Docker.AutoDl.Remote.Trakt
             shows.RemoveAll(s => s.Watched);
 
             // Prepare blacklist
-            var blackList = Database.BlackLists;
+            List<BlackListShow> blackList = Database.BlackLists;
 
             // Remove Show blacklist
             shows.RemoveAll(s => blackList.Any(b => b.TraktShowId == s.Id && b.Entire));
+            List<Task> tasks = new List<Task>();
 
             foreach (TraktShow traktShow in shows)
             {
-                // Remove Season blacklist
-                traktShow.Seasons.RemoveAll(s => blackList.Any(b => b.TraktShowId == traktShow.Id && b.Season == s.Season));
-
-                if (traktShow.Seasons.Any())
-                {
-                    var collectionProgress =
-                        Client.Shows.GetShowCollectionProgressAsync(traktShow.Id.ToString(), false, false, false);
-
-                    collectionProgress.Wait();
-                    var collectionProgressRes = collectionProgress.Result;
-
-                    foreach (ITraktSeasonCollectionProgress season in collectionProgressRes.Value.Seasons)
-                    {
-                        var misSeason = traktShow.Seasons.SingleOrDefault(e => e.Season == season.Number);
-                        if (misSeason == null)
-                        {
-                            misSeason = new TraktSeason { Season = season.Number };
-                            traktShow.Seasons.Add(misSeason);
-                        }
-
-                        foreach (ITraktEpisodeCollectionProgress episode in season.Episodes.Where(e =>
-                            !e.Completed.HasValue || !e.Completed.Value))
-                        {
-                            // Already existing in missing
-                            if (misSeason.MissingEpisodes.All(m => m.Episode != episode.Number))
-                            {
-                                misSeason.MissingEpisodes.Add(new MissingEpisode { Episode = episode.Number });
-                            }
-                        }
-                    }
-
-                    foreach (ITraktSeason season in collectionProgressRes.Value.HiddenSeasons)
-                    {
-                        TraktSeason traktSeason = traktShow.Seasons.SingleOrDefault(e => e.Season == season.Number);
-                        if (traktSeason != null)
-                        {
-                            // Store hidden season
-                            var show = new BlackListShow
-                            {
-                                TraktShowId = traktShow.Id,
-                                Season = season.Number,
-                                SerieName = traktShow.SerieName
-                            };
-                            Database.AddBlackList(show);
-
-                            traktSeason.Hidden = true;
-                        }
-                    }
-
-                    foreach (var showSeason in traktShow.Seasons)
-                    {
-                        // Remove watched from missing
-                        showSeason.MissingEpisodes.RemoveAll(m => m.Watched);
-
-                        // Remove collected from missing
-                        showSeason.MissingEpisodes.RemoveAll(m => m.Collected);
-
-                        // BlackList Ended series if complete
-                        if ((traktShow.Status == TraktShowStatus.Ended || traktShow.Status == TraktShowStatus.Canceled) && !showSeason.MissingEpisodes.Any())
-                        {
-                            // Store hidden season
-                            var show = new BlackListShow
-                            {
-                                TraktShowId = traktShow.Id,
-                                Season = showSeason.Season,
-                                SerieName = traktShow.SerieName
-                            };
-                            Database.AddBlackList(show);
-                        }
-                    }
-
-                    traktShow.Seasons.RemoveAll(s => s.Hidden);
-
-                    traktShow.Seasons.RemoveAll(s => !s.MissingEpisodes.Any());
-                }
+                tasks.Add(HandleProgress(traktShow, blackList));
             }
+
+            Task.WaitAll(tasks.ToArray());
 
             shows.RemoveAll(s => !s.Seasons.Any());
 
-            return shows;
+            return shows.Select(s => (Show)s).ToList();
+        }
+
+        private async Task HandleProgress(TraktShow traktShow, List<BlackListShow> blackList)
+        {
+            // Remove Season blacklist
+            traktShow.Seasons.RemoveAll(s => blackList.Any(b => b.TraktShowId == traktShow.Id && b.Season == s.Season));
+
+            if (traktShow.Seasons.Any())
+            {
+                var collectionProgress =
+                    await Client.Shows.GetShowCollectionProgressAsync(traktShow.Id.ToString(), false, false, false).ConfigureAwait(false);
+
+                var collectionProgressRes = collectionProgress;
+
+                foreach (ITraktSeasonCollectionProgress season in collectionProgressRes.Value.Seasons)
+                {
+                    var misSeason = traktShow.Seasons.SingleOrDefault(e => e.Season == season.Number);
+                    if (misSeason == null)
+                    {
+                        misSeason = new TraktSeason { Season = season.Number };
+                        traktShow.Seasons.Add(misSeason);
+                    }
+
+                    foreach (ITraktEpisodeCollectionProgress episode in season.Episodes.Where(e =>
+                        !e.Completed.HasValue || !e.Completed.Value))
+                    {
+                        // Already existing in missing
+                        if (misSeason.MissingEpisodes.All(m => m.Episode != episode.Number))
+                        {
+                            misSeason.MissingEpisodes.Add(new MissingEpisode { Episode = episode.Number });
+                        }
+                    }
+                }
+
+                foreach (ITraktSeason season in collectionProgressRes.Value.HiddenSeasons)
+                {
+                    TraktSeason traktSeason = traktShow.Seasons.SingleOrDefault(e => e.Season == season.Number);
+                    if (traktSeason != null)
+                    {
+                        // Store hidden season
+                        var show = new BlackListShow
+                        {
+                            TraktShowId = traktShow.Id,
+                            Season = season.Number,
+                            SerieName = traktShow.SerieName
+                        };
+                        Database.AddBlackList(show);
+
+                        traktSeason.Hidden = true;
+                    }
+                }
+
+                foreach (var showSeason in traktShow.Seasons)
+                {
+                    // Remove watched from missing
+                    showSeason.MissingEpisodes.RemoveAll(m => m.Watched);
+
+                    // Remove collected from missing
+                    showSeason.MissingEpisodes.RemoveAll(m => m.Collected);
+
+                    // BlackList Ended series if complete
+                    if ((traktShow.Status == TraktShowStatus.Ended || traktShow.Status == TraktShowStatus.Canceled) && !showSeason.MissingEpisodes.Any())
+                    {
+                        // Store hidden season
+                        var show = new BlackListShow
+                        {
+                            TraktShowId = traktShow.Id,
+                            Season = showSeason.Season,
+                            SerieName = traktShow.SerieName
+                        };
+                        Database.AddBlackList(show);
+                    }
+                }
+
+                traktShow.Seasons.RemoveAll(s => s.Hidden);
+
+                traktShow.Seasons.RemoveAll(s => !s.MissingEpisodes.Any());
+            }
         }
     }
 }

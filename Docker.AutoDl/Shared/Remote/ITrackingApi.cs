@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Docker.AutoDl.Shared
 {
-    public interface ITraktApi
+    public interface ITrackingApi
     {
         string GetMode { get; }
 
@@ -12,6 +12,6 @@ namespace Docker.AutoDl.Shared
         /// Get the missing episodes
         /// </summary>
         /// <returns></returns>
-        List<TraktShow> GetMissingEpisodes();
+        List<Show> GetMissingEpisodes();
     }
 }

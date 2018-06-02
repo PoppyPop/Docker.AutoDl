@@ -3,8 +3,11 @@ using System.Composition;
 using System.Composition.Convention;
 using System.Composition.Hosting;
 using System.Reflection;
+using Docker.AutoDl.Mock.Remote;
+using Docker.AutoDl.Remote.ExDown;
 using Docker.AutoDl.Shared;
 using Docker.AutoDl.Shared.Database;
+using Docker.AutoDl.Shared.Remote.ExDown;
 
 namespace Docker.AutoDl
 {
@@ -34,9 +37,12 @@ namespace Docker.AutoDl
             convention.ForType<AutoDl>().Export<IAutoDl>();
 
             convention.ForType<Remote.Trakt.TraktApiClient>().Export<ITraktApiClient>();
-            convention.ForType<Remote.Trakt.TraktApi>().Export<ITraktApi>();
+            convention.ForType<Mock.Remote.Trakt.TraktApi>().Export<ITrackingApi>();
 
             convention.ForType<Database.SqLite.SqLiteDatabase>().Export<IDatabase>();
+            convention.ForType<FileWebFetcher>().Export<IHttpFetcher>();
+
+            convention.ForType<ExDown>().Export<IUrlFetcher>();
 
             #endregion
 
